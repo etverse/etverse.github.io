@@ -1,0 +1,69 @@
+---
+title: "Philosophy"
+subtitle: "Triangulating causal evidence in epidemiology"
+toc: true
+toc-depth: 2
+---
+
+## The problem
+
+Every attempt to estimate a causal effect from observational data rests on
+assumptions that cannot be fully verified — no unmeasured confounding, correct
+model specification, no selection bias, accurate measurement. A single estimate,
+however carefully produced, inherits whatever bias its assumptions let through.
+
+## Triangulation
+
+*Triangulation* is the practice of integrating results from several approaches
+that have **different and unrelated sources of potential bias**
+([Lawlor, Tilling & Davey Smith, 2016](https://doi.org/10.1093/ije/dyw314)).
+The logic is simple: if two methods would be wrong in *different* directions for
+*different* reasons, their agreement is hard to explain by bias alone. Convergence
+is evidence; divergence is a signal to investigate.
+
+The etverse builds this idea into tooling at three levels.
+
+### Methodological triangulation
+
+Estimate one estimand several ways. G-computation leans on a correctly specified
+outcome model; IPW leans on a correctly specified treatment model; AIPW is doubly
+robust; g-estimation targets effect modification; matching trades efficiency for
+transparency. These assumptions fail independently, so agreement across them is
+informative.
+
+→ `causatr`, `survatr`, `separatr`
+
+### Design triangulation
+
+Ask the same question through study designs whose biases are unrelated — a cohort
+analysis, a case-control study, a target-trial emulation, a negative-control
+analysis. A confounding structure that biases one design need not bias another.
+
+→ `matchatr`, `negatr`, `emulatr`, `dagtr`
+
+### Evidence triangulation
+
+Integrate across data sources, populations, and assumptions rather than resting
+on a single point estimate. Quantitative bias analysis makes the residual
+uncertainty explicit; a meta-layer assesses whether the body of estimates
+actually triangulates.
+
+→ `biasetr`, `triangulatr`
+
+## Design principles
+
+- **One job per package.** Each `-tr` package does one thing well; the suffix
+  marks its place in the ecosystem.
+- **A shared engine.** `causatr` provides the estimation core (sandwich and
+  bootstrap variance, contrasts); other packages compose with it rather than
+  reimplementing it.
+- **A common grammar.** Fit, then contrast. The same two-step API recurs across
+  packages, so moving between methods costs little.
+- **Honest uncertainty.** The point of triangulating is to surface disagreement,
+  not to hide it.
+
+## Further reading
+
+- Lawlor DA, Tilling K, Davey Smith G. Triangulation in aetiological epidemiology.
+  *International Journal of Epidemiology*. 2016;45(6):1866–1886.
+- Hernán MA, Robins JM. *Causal Inference: What If*. Boca Raton: Chapman & Hall/CRC, 2025.

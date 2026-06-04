@@ -1,0 +1,36 @@
+project:
+  type: website
+  output-dir: docs
+
+website:
+  title: "etverse"
+  description: "An R ecosystem for triangulating causal evidence in epidemiology."
+  site-url: https://etverse.github.io
+  repo-url: https://github.com/etverse
+  favicon: favicon.png
+  navbar:
+    search: false
+    pinned: true
+    left:
+      - text: Home
+        href: index.qmd
+      - text: Philosophy
+        href: philosophy.qmd
+      - text: Packages
+        href: index.qmd#packages
+    right:
+      - icon: github
+        href: https://github.com/etverse
+        aria-label: etverse on GitHub
+  page-footer:
+    center: "Part of the etverse · triangulating causal evidence in epidemiology"
+    border: true
+
+format:
+  html:
+    theme: lumen
+    css: styles.css
+    toc: false
+    code-link: true
+    grid:
+      body-width: 1000px

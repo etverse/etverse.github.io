@@ -1,0 +1,116 @@
+---
+pagetitle: "etverse — triangulating causal evidence in epidemiology"
+toc: false
+---
+
+::: {.hero}
+# the etverse {.hero-title}
+
+An R ecosystem for **triangulating causal evidence** in epidemiology.
+
+No single study design or analytic method is free of bias. The etverse gives
+each approach its own focused package, with a shared grammar, so that you can
+estimate the same effect several different ways — and trust it more when the
+answers converge.
+
+[Read the philosophy →](philosophy.qmd){.btn .btn-primary .btn-lg role="button"}
+[Browse on GitHub](https://github.com/etverse){.btn .btn-outline-secondary .btn-lg role="button"}
+:::
+
+## Why triangulate? {.mt-5}
+
+Triangulation integrates results from approaches with **different and unrelated
+sources of potential bias**. When estimates from methods that would fail in
+different ways still point to the same answer, confidence in that answer grows.
+The etverse builds this idea into tooling across three levels:
+
+::: {.grid .level-grid}
+::: {.g-col-12 .g-col-md-4}
+### Methodological
+The same estimand, estimated several ways — g-computation, IPW, AIPW,
+g-estimation, matching — each leaning on different modelling assumptions.
+:::
+::: {.g-col-12 .g-col-md-4}
+### Design
+The same question, asked through different study designs — cohort, case-control,
+target-trial emulation, negative controls — each vulnerable to different biases.
+:::
+::: {.g-col-12 .g-col-md-4}
+### Evidence
+Findings integrated across data sources, populations, and assumptions, rather
+than resting on a single point estimate from a single dataset.
+:::
+:::
+
+## Packages {#packages .mt-5}
+
+Every package ends in `-tr` — for *triangulation*. Each does one job well and
+composes with the others through a shared engine.
+
+::: {.grid .pkg-grid}
+
+::: {.g-col-12 .g-col-md-6 .pkg-card}
+### [causatr](https://etverse.github.io/causatr/) [available]{.badge .bg-success}
+Unified causal effect estimation: parametric g-formula and ICE g-computation,
+inverse-probability weighting, doubly-robust AIPW, structural nested mean
+models, and matching. The engine the rest of the etverse builds on.
+:::
+
+::: {.g-col-12 .g-col-md-6 .pkg-card}
+### [survatr](https://etverse.github.io/survatr/) [available]{.badge .bg-success}
+Causal survival analysis on person-period data: pooled-logistic hazard
+g-computation, IPW and ICE for time-to-event outcomes, risk-difference / RMST
+contrasts, competing risks, and IPCW.
+:::
+
+::: {.g-col-12 .g-col-md-6 .pkg-card}
+### [matchatr](https://etverse.github.io/matchatr/) [in development]{.badge .bg-warning .text-dark}
+Classical and causal estimation for (matched) case-control, nested case-control,
+and case-cohort designs — conditional logistic and weighted Cox models, plus
+case-control–weighted marginal effects that compose with causatr and survatr.
+:::
+
+::: {.g-col-12 .g-col-md-6 .pkg-card}
+### [negatr](https://etverse.github.io/negatr/) [in development]{.badge .bg-warning .text-dark}
+Negative-control methods for detecting and correcting unmeasured confounding,
+selection bias, and measurement error — from simple null tests to proximal
+causal inference and empirical calibration.
+:::
+
+::: {.g-col-12 .g-col-md-6 .pkg-card}
+### biasetr [planned]{.badge .bg-secondary}
+Quantitative bias analysis — modelling how much a finding could shift under
+plausible biases, for the general case not covered by the negative-control
+machinery in negatr.
+:::
+
+::: {.g-col-12 .g-col-md-6 .pkg-card}
+### separatr [planned]{.badge .bg-secondary}
+Separable effects — decomposing a treatment effect into components acting
+through distinct mechanisms, for sharper, more mechanistic causal questions.
+:::
+
+::: {.g-col-12 .g-col-md-6 .pkg-card}
+### dagtr [planned]{.badge .bg-secondary}
+Directed acyclic graphs for encoding causal assumptions and deriving adjustment
+sets to drive the estimators above.
+:::
+
+::: {.g-col-12 .g-col-md-6 .pkg-card}
+### emulatr [planned]{.badge .bg-secondary}
+Target-trial emulation — turning an observational question into an explicit
+protocol and analysis.
+:::
+
+::: {.g-col-12 .g-col-md-6 .pkg-card}
+### triangulatr [planned]{.badge .bg-secondary}
+The meta-package — collect estimates from across the etverse and assess whether
+they triangulate.
+:::
+
+:::
+
+::: {.callout-note}
+The etverse is early and evolving. Package scopes marked *planned* describe
+intended direction and may change.
+:::
