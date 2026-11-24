@@ -43,24 +43,13 @@ analysis. A confounding structure that biases one design need not bias another.
 
 ### Evidence triangulation
 
-Integrate across data sources, populations, and assumptions rather than resting
-on a single point estimate. Quantitative bias analysis makes the residual
-uncertainty explicit; a meta-layer assesses whether the body of estimates
-actually triangulates.
+Integrate across data sources, populations, and assumptions rather than resting on a single point estimate. Quantitative bias analysis makes the residual uncertainty explicit, and a meta-layer assesses whether the body of estimates triangulates.
 
 → `biasetr`, `triangulatr`
 
 ## Design principles
 
-- **One job per package.** Each `-tr` package does one thing well; the suffix
-  marks its place in the ecosystem.
-- **A shared engine.** `causatr` provides the estimation core (sandwich and
-  bootstrap variance, contrasts); other packages compose with it rather than
-  reimplementing it.
-- **A common grammar.** Fit, then contrast. The same two-step API recurs across
-  packages, so moving between methods costs little.
-- **Honest uncertainty.** The point of triangulating is to surface disagreement,
-  not to hide it.
+The [design](design.qmd) page sets out how the packages are built and how they work together: what each one owns, the verbs and argument names they share, and the objects they return.
 
 ## Further reading
 

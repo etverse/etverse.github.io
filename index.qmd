@@ -51,9 +51,12 @@ composes with the others through a shared engine.
 
 ::: {.g-col-12 .g-col-md-6 .pkg-card}
 ### [causatr](https://etverse.github.io/causatr/) [available]{.badge .bg-success}
-Unified causal effect estimation: parametric g-formula and ICE g-computation,
-inverse-probability weighting, doubly-robust AIPW, structural nested mean
-models, and matching. The engine the rest of the etverse builds on.
+Causal effects of point treatments: g-computation, inverse-probability weighting, doubly-robust AIPW, structural nested mean models and matching. The engine the rest of the etverse builds on.
+:::
+
+::: {.g-col-12 .g-col-md-6 .pkg-card}
+### dynamatr [planned]{.badge .bg-secondary}
+Causal effects of time-varying treatments: ICE g-computation, natural-history modified treatment policies, and longitudinal IPW, AIPW and structural nested models.
 :::
 
 ::: {.g-col-12 .g-col-md-6 .pkg-card}

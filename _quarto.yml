@@ -16,6 +16,8 @@ website:
         href: index.qmd
       - text: Philosophy
         href: philosophy.qmd
+      - text: Design
+        href: design.qmd
       - text: Packages
         href: index.qmd#packages
     right:

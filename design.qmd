@@ -1,0 +1,209 @@
+---
+title: "Design"
+description: "How the etverse packages are built and how they work together."
+toc: true
+---
+
+This page fixes how every etverse package is built and how the packages work together: what each one owns, how they depend on each other, the verbs and argument names they share, the objects they return, the conditions they raise, how their code and documentation are written, and the repository they start from. negatr and dynamatr follow it from their first commit. causatr, survatr and matchatr are being brought into line with it, and until that work is released their own documentation describes what they do today.
+
+## Principles
+
+Four principles govern every package's interface. They are adapted from the design half of the [philosophy of DeepSeek's dsh-superagent prototype](https://github.com/deepseek-ai/dsh-superagent-prototype/blob/main/docs/000-philosophy.md), published under the MIT licence.
+
+### Few concepts
+
+The ecosystem has five concepts: a fit, an intervention, a contrast, a diagnostic and a result. A new need becomes an argument value or a method on one of them. It does not become a new verb or a new family of classes.
+
+### Few arguments
+
+A default replaces an argument when one value suits almost every analysis. No exported verb takes more than 15 formal arguments, and no verb moves its options into a `control` object: an option either has a default good enough to remove it, or it is an argument the user can see.
+
+### Output that shows only what needs attention
+
+`print()` lists problems first and then the estimates. A check that finds nothing wrong takes one line, such as `Positivity: no violations. Balance: all |SMD| < 0.1.`, and the full tables are in `summary()`. A warning means the user has to act, so no package warns that it used a default, prints a startup message, or passes another package's note through unchanged. A note raised by another package is caught, and it is raised again as an etverse condition only when the user has to act on it. Printed tables carry no column-type rows.
+
+### Documents read in order
+
+Each package's vignettes are numbered, and each builds only on the ones before it, so a reader never meets a concept that an earlier vignette has not introduced.
+
+## Packages
+
+Every feature has one owner. Another package that needs the feature calls the owner's developer interface and does not write its own version.
+
+| Package | Owns |
+|---|---|
+| causatr | Point treatments: g-computation, inverse probability weighting (IPW), augmented IPW (AIPW), matching and structural nested models, with transport to a target population, censoring weights for point estimators, multinomial outcomes, multivariate treatments and stochastic interventions. It also owns what every package uses: the `contrast()` and `diagnose()` generics, the result contract, the intervention constructors, influence-function and bootstrap variance, pooling across multiple imputations, the shared validators and the condition helpers. |
+| dynamatr | Time-varying treatments: iterated conditional expectation (ICE) g-computation, natural-history modified treatment policies, longitudinal IPW, AIPW and structural nested models, conversion to person-period data, and censoring weights for longitudinal data. |
+| survatr | Time-to-event estimands in cohort data: survival and risk curves, restricted mean survival time (RMST), restricted mean time lost and competing risks. |
+| matchatr | Sampled designs: unmatched and matched case-control, nested case-control, case-cohort and two-phase designs. Its survival g-computation is its own, because survatr's estimator cannot carry the time-varying risk-set weights a case-cohort design needs. Self-controlled case series and power calculations are outside its scope. |
+| negatr | Methods that use observed negative-control exposures or outcomes to detect and correct bias, proximal causal inference included. |
+| biasetr | Bias analysis that needs no negative-control data: E-values, bias formulas and probabilistic bias analysis. |
+| emulatr | Target-trial emulation: the protocol object, clone-censor-weight analyses and sequential trials, with causatr and survatr as its estimators. |
+| dagtr | Turning a directed acyclic graph into an adjustment set and a `confounders` formula, as a thin layer over dagitty. |
+| separatr | Separable-effect estimands, built on survatr. |
+| triangulatr | Collecting results from the other packages through `tidy()` and `glance()` and assessing whether they agree. |
+
+A package supports a combination of estimator, design, intervention and variance method once an independent oracle (a reference implementation written by others, or estimating equations derived from the paper by someone who has not read the R code) and a Monte Carlo test of bias, standard error and coverage check it. Any other combination raises the package's `unsupported` error and names the combination.
+
+## Dependencies
+
+```text
+causatr
+├── dynamatr
+│   └── survatr        imports causatr and dynamatr
+│       ├── separatr
+│       └── emulatr    also imports causatr
+├── matchatr
+├── negatr
+└── biasetr
+
+dagtr                  imports dagitty only
+triangulatr            imports generics only; every other package is in Suggests
+```
+
+The graph has no cycles, and no chain runs more than three levels below causatr. A package lists another in Imports only when its `R/` code calls it. Every package that builds on causatr declares the lowest causatr version it works with, and every `Remotes` entry points to a tagged release rather than a branch. dagtr and triangulatr install without any estimator package. No etverse package calls another's unexported functions with `:::`.
+
+## Verbs
+
+Each package has one fit verb, named after the package without its final r: `causat()`, `dynamat()`, `survat()`, `matchat()`, `negat()`. The fit verb takes the data and the model specification and returns a fit.
+
+causatr defines the two generics every package shares, `contrast(fit, ...)` and `diagnose(fit, ...)`. `contrast()` estimates the quantities of interest under each intervention and compares them, and `diagnose()` checks the assumptions the fit rests on, such as positivity and covariate balance. Every other package imports both generics from causatr, registers its methods on them and re-exports them, and no other package exports a function with either name. negatr's corrections are `contrast()` methods and its assumption checks are `diagnose()` methods.
+
+The methods take the shared arguments in one order: `interventions`, `type`, `measure`, `ci_method`, `conf_level`, `n_boot`, `trim`. A package adds a verb only for a concept that neither generic expresses. Plots are `plot()` methods, and forest plots are drawn with the forrest package.
+
+Interventions are built with causatr's constructors (`static()`, `shift()`, `scale_by()`, `threshold()`, `dynamic()`, `ipsi()`, `stochastic()` and the natural-history policies) in every package.
+
+## Arguments
+
+One concept has one name in every package.
+
+| Argument | Meaning | Default |
+|---|---|---|
+| `data` | the analysis data | none |
+| `outcome` | the outcome column | none |
+| `treatment` | the treatment column or columns | none |
+| `confounders` | a one-sided formula used by every model, or a named list of formulas with the names `outcome`, `treatment`, `censoring`, `sampling` and `tv` | none |
+| `id`, `time` | the person and time columns of long data | none |
+| `estimator` | the estimator | `"gcomp"` in causatr, dynamatr and survatr; set by the design in matchatr |
+| `model_fn` | the function that fits the outcome model | `stats::glm` |
+| `propensity_model_fn` | the function that fits the treatment model | `stats::glm` |
+| `censoring_model_fn` | the function that fits the censoring model | `stats::glm` |
+| `weights` | observation weights | `NULL` |
+| `interventions` | a named list of interventions to compare | none; matchatr's designs fix the comparison |
+| `type` | the contrast scale: `"difference"`, `"ratio"` or `"or"`, and a package may add a scale such as `"hr"` or `"af"` | `"difference"` |
+| `measure` | the quantity contrasted in survatr and matchatr: `"risk"`, `"survival"`, `"rmst"`, `"rmtl"`, `"cif"` or `"quantile"` | set by each package |
+| `ci_method` | `"sandwich"`, `"bootstrap"` or `"none"`; matchatr also accepts `"model"` | `"sandwich"` |
+| `conf_level` | the confidence level; `tidy()` takes broom's `conf.level` | `0.95` |
+| `n_boot` | bootstrap replicates | `1000` |
+| `boot_ci` | `"percentile"` or `"normal"` bootstrap intervals | `"percentile"` |
+| `trim` | the quantile at which weights are truncated, an argument of `contrast()` | `1`, no truncation |
+
+No package uses `exposure` or `covariates` for these concepts, and no verb warns when a default is used. At 1,000 replicates a 95% percentile interval rests on 25 replicates in each tail. `trim` belongs to `contrast()` because the density-ratio weights of shift and incremental interventions depend on the intervention, which is only known there.
+
+No verb has a `seed`, `parallel` or `ncpus` argument. Calling `set.seed()` before a verb makes its result reproducible, in parallel runs as well, and the bootstrap reads its parallel settings from the `boot.parallel` and `boot.ncpus` options.
+
+## Objects
+
+### Fits
+
+A fit has the class `c("<pkg>_fit_<estimator>", "<pkg>_fit", "etverse_fit")`, for example `causatr_fit_ipw`. Estimator-specific code is a method for its subclass, so no code branches on the name of the estimator. A field that only one estimator needs is part of that subclass and is checked by its constructor; a fit has no untyped list of details.
+
+### Results
+
+Every result has the class `c("<pkg>_result", "etverse_result")` and is built by causatr's developer interface. It holds these fields:
+
+| Field | Content |
+|---|---|
+| `estimates` | one row per intervention, and per time and cause where the result has them |
+| `contrasts` | one row per comparison |
+| `type`, `measure`, `estimand` | the contrast scale, the quantity and the target population |
+| `reference` | the intervention the others are compared with |
+| `ci_method`, `conf_level` | how the intervals were computed |
+| `vcov` | the covariance matrix of the estimates, stored whenever intervals are computed |
+| `n`, `estimator`, `call` | the sample size, the estimator and the call |
+
+A package adds a field only when its constructor checks it. causatr writes `print()`, `summary()`, `tidy()`, `glance()`, `coef()`, `vcov()`, `confint()`, `plot()` and `knit_print()` once for `etverse_result`, and a package overrides a method only where its result needs something different, as survatr's `plot()` draws curves over time.
+
+### `tidy()` and `glance()`
+
+`tidy()` returns a data.frame with broom's column names: `term`, `estimate`, `std.error`, `conf.low` and `conf.high`, a `component` column that is `"estimate"` or `"contrast"`, and `time` and `cause` when the result has them. `glance()` returns one row with the package, estimator, measure, contrast scale, CI method and sample size. triangulatr reads results through these two methods only.
+
+### Data structures
+
+Every table inside a package is a data.table. A fit stores the data once and keeps only the parts of each fitted model that the variance and prediction code reads, not the whole model object. What a user receives from `tidy()` and `glance()` is a plain data.frame.
+
+## Developer interface
+
+causatr exports the functions other etverse packages build on, and dynamatr does the same for its time-varying engine. Every such function has the prefix `dev_` and is documented with `@keywords internal`, so it does not appear in the user-facing reference index. The functions fall into groups, each documented on one help page:
+
+- model influence functions and variance
+- treatment models, densities and weights
+- censoring weights
+- interventions
+- the bootstrap engine
+- pooling across multiple imputations
+- the fit and result constructors
+- shared input validators
+- condition helpers
+- in dynamatr, the steps of the ICE recursion and person-period conversion
+
+A change to a `dev_` function is a breaking change: it is recorded in `NEWS.md` and raises the package's minor version. causatr's continuous integration runs the test suites of the packages that build on it on every pull request.
+
+## Conditions
+
+Every error, warning and message carries three classes: a leaf class that names the problem, `<pkg>_<problem>`; a package class, `<pkg>_error` or `<pkg>_warning`; and an ecosystem class, `etverse_error` or `etverse_warning`. A user can therefore catch one specific problem, anything from one package, or anything from the etverse. No condition is raised without its classes.
+
+Messages are written with cli, so arguments and values are marked up and plurals agree. causatr's developer interface provides `dev_abort()`, `dev_warn()` and `dev_inform()`, which attach the package and ecosystem classes, and each package calls them through a two-line local function that supplies its own name. A combination a package does not support raises `<pkg>_unsupported`, and its message names the combination.
+
+Tests check a condition by its class, with `expect_error(class = )` and `expect_warning(class = )`, and use snapshots only to check the wording of a message.
+
+## Writing
+
+The same writing rules hold in every package, for code comments, documentation and prose.
+
+A code comment explains why: a derivation, with the paper and equation it comes from; a design reason; an invariant the code relies on. It does not restate what the code does, and it never names a development phase, chunk, track, review or incident, because a reader of the code has no access to those.
+
+Documentation is roxygen in Markdown, with titles in sentence case. Every exported function has an example that runs. Internal functions are marked `@noRd` and carry a docstring only where it says something the signature does not.
+
+A test's name states the behaviour it checks, such as "IPW sandwich SE matches delicatessen". An error message states the problem first, then says in an `i` bullet how to fix it.
+
+Markdown and Quarto files keep each paragraph on one line, write headings in sentence case and use no horizontal rules. Every text uses the argument names on this page.
+
+A check in the repository template fails continuous integration when a planning label (a phase, chunk or track number) appears in `R/`, `tests/` or `vignettes/`, and when a paragraph in a Markdown or Quarto file is wrapped across lines.
+
+## Vignettes
+
+Every package has the same numbered set of vignettes, read in order.
+
+1. `01-get-started`: one real analysis from start to finish (fit, diagnose, contrast and `tidy()`) on NHEFS or another standard dataset, in under 300 lines.
+2. `02-supported`: the table of what the package supports, generated from its own dispatch tables so that it cannot drift from the code, together with every combination it rejects and the class of the error that rejection raises. causatr's also shows how missing data are handled in each scenario.
+3. One how-to per estimator or design: when to use the method, what it assumes, how to call it and which diagnostics to read, with the mathematics beside the code that implements it, in at most 400 lines.
+4. One theory vignette per method: identification, the estimating equations, the influence function and the variance, with citations.
+5. A validation vignette: each estimator compared with independent software, with the numbers read from committed fixtures, and the Monte Carlo results for bias, standard error and coverage.
+
+Every vignette renders in under 60 seconds in continuous integration. Anything heavier, such as a simulation, a large bootstrap or a comparison with other software, runs in a script under `data-raw/`, and the vignette reads its output. A vignette shows results as `print()` shows them.
+
+One vignette spans the packages and lives on this site: the same question answered through causatr, survatr, matchatr and negatr, which is the triangulation the ecosystem exists for.
+
+## How the etverse is built
+
+The etverse is written with Claude Code, Anthropic's coding agent. Claude Code writes most of the code, tests and documentation, under the direction of the maintainer, who reviews what it produces. The maintainer decides the design on this page, what each package owns and which methods a package supports.
+
+No number is trusted because the code that produced it looks right. Every estimator is checked against independent software or against estimating equations derived from the paper by someone who has not read the R code, and Monte Carlo tests check its bias, standard error and coverage. The validation vignette of each package shows those comparisons.
+
+Every package README carries the same short acknowledgement, which links to this section.
+
+## Repository template
+
+Every package starts from the public template repository `etverse/template`, which holds the files the packages share:
+
+- `DESCRIPTION` fields: `Depends: R (>= 4.1.0)`, testthat edition 3 run in parallel, and "Part of the etverse" in the description
+- `air.toml`, `.lintr`, `codecov.yml`, `.Rbuildignore`, `.gitignore` and a `Makefile` with the same targets in every package
+- workflows for the format check, the documentation site (altdoc with Quarto) and test coverage, run on pushes and pull requests
+- `R-CMD-check`, which runs a fast test tier on Ubuntu with the released R for every pull request, and the full platform matrix (macOS, Windows, and Ubuntu with R-devel, the released R and the previous release) on the main branch
+- the full test tier, run weekly or on demand and split across jobs, selected by the `ETVERSE_TEST_TIER` environment variable, with no nightly schedule
+- `tests/testthat/helper-dgp.R` for the data-generating processes, and oracle scripts with their outputs in `tests/testthat/fixtures/<language>/`, with a pinned `requirements.txt` for Python; a test whose fixture is missing fails rather than skips
+- `ROADMAP.md` for planned work, `NEWS.md` for changes a user would notice, and `README.Rmd` rendered in continuous integration, with the acknowledgement of Claude Code
+- a short `CLAUDE.md` and path-scoped rules under `.claude/rules/`
+
+`make template-check` compares a package's shared files with the template, and continuous integration fails when they differ.
