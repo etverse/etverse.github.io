@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.11.9">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="How the etverse packages are built and how they work together.">
+
+<title>Design – etverse</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./favicon.png" rel="icon" type="image/png">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-72828441c7ecd9471158c62eb830448b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark" aria-label="Site">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">etverse</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./philosophy.html"> 
+<span class="menu-text">Philosophy</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="./design.html" aria-current="page"> 
+<span class="menu-text">Design</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./index.html#packages"> 
+<span class="menu-text">Packages</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/etverse"> <i class="bi bi-github" role="img" aria-label="etverse on GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#principles" id="toc-principles" class="nav-link active" data-scroll-target="#principles">Principles</a>
+  <ul class="collapse">
+  <li><a href="#few-concepts" id="toc-few-concepts" class="nav-link" data-scroll-target="#few-concepts">Few concepts</a></li>
+  <li><a href="#few-arguments" id="toc-few-arguments" class="nav-link" data-scroll-target="#few-arguments">Few arguments</a></li>
+  <li><a href="#output-that-shows-only-what-needs-attention" id="toc-output-that-shows-only-what-needs-attention" class="nav-link" data-scroll-target="#output-that-shows-only-what-needs-attention">Output that shows only what needs attention</a></li>
+  <li><a href="#documents-read-in-order" id="toc-documents-read-in-order" class="nav-link" data-scroll-target="#documents-read-in-order">Documents read in order</a></li>
+  </ul></li>
+  <li><a href="#packages" id="toc-packages" class="nav-link" data-scroll-target="#packages">Packages</a></li>
+  <li><a href="#dependencies" id="toc-dependencies" class="nav-link" data-scroll-target="#dependencies">Dependencies</a></li>
+  <li><a href="#verbs" id="toc-verbs" class="nav-link" data-scroll-target="#verbs">Verbs</a></li>
+  <li><a href="#arguments" id="toc-arguments" class="nav-link" data-scroll-target="#arguments">Arguments</a></li>
+  <li><a href="#objects" id="toc-objects" class="nav-link" data-scroll-target="#objects">Objects</a>
+  <ul class="collapse">
+  <li><a href="#fits" id="toc-fits" class="nav-link" data-scroll-target="#fits">Fits</a></li>
+  <li><a href="#results" id="toc-results" class="nav-link" data-scroll-target="#results">Results</a></li>
+  <li><a href="#tidy-and-glance" id="toc-tidy-and-glance" class="nav-link" data-scroll-target="#tidy-and-glance"><code>tidy()</code> and <code>glance()</code></a></li>
+  <li><a href="#data-structures" id="toc-data-structures" class="nav-link" data-scroll-target="#data-structures">Data structures</a></li>
+  </ul></li>
+  <li><a href="#developer-interface" id="toc-developer-interface" class="nav-link" data-scroll-target="#developer-interface">Developer interface</a></li>
+  <li><a href="#conditions" id="toc-conditions" class="nav-link" data-scroll-target="#conditions">Conditions</a></li>
+  <li><a href="#writing" id="toc-writing" class="nav-link" data-scroll-target="#writing">Writing</a></li>
+  <li><a href="#vignettes" id="toc-vignettes" class="nav-link" data-scroll-target="#vignettes">Vignettes</a></li>
+  <li><a href="#how-the-etverse-is-built" id="toc-how-the-etverse-is-built" class="nav-link" data-scroll-target="#how-the-etverse-is-built">How the etverse is built</a></li>
+  <li><a href="#repository-template" id="toc-repository-template" class="nav-link" data-scroll-target="#repository-template">Repository template</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content" tabindex="-1">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Design</h1>
+</div>
+
+<div>
+  <div class="description">
+    How the etverse packages are built and how they work together.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>This page fixes how every etverse package is built and how the packages work together: what each one owns, how they depend on each other, the verbs and argument names they share, the objects they return, the conditions they raise, how their code and documentation are written, and the repository they start from. negatr and dynamatr follow it from their first commit. causatr, survatr and matchatr are being brought into line with it, and until that work is released their own documentation describes what they do today.</p>
+<section id="principles" class="level2">
+<h2 class="anchored" data-anchor-id="principles">Principles</h2>
+<p>Four principles govern every package’s interface. They are adapted from the design half of the <a href="https://github.com/deepseek-ai/dsh-superagent-prototype/blob/main/docs/000-philosophy.md">philosophy of DeepSeek’s dsh-superagent prototype</a>, published under the MIT licence.</p>
+<section id="few-concepts" class="level3">
+<h3 class="anchored" data-anchor-id="few-concepts">Few concepts</h3>
+<p>The ecosystem has five concepts: a fit, an intervention, a contrast, a diagnostic and a result. A new need becomes an argument value or a method on one of them. It does not become a new verb or a new family of classes.</p>
+</section>
+<section id="few-arguments" class="level3">
+<h3 class="anchored" data-anchor-id="few-arguments">Few arguments</h3>
+<p>A default replaces an argument when one value suits almost every analysis. No exported verb takes more than 15 formal arguments, and no verb moves its options into a <code>control</code> object: an option either has a default good enough to remove it, or it is an argument the user can see.</p>
+</section>
+<section id="output-that-shows-only-what-needs-attention" class="level3">
+<h3 class="anchored" data-anchor-id="output-that-shows-only-what-needs-attention">Output that shows only what needs attention</h3>
+<p><code>print()</code> lists problems first and then the estimates. A check that finds nothing wrong takes one line, such as <code>Positivity: no violations. Balance: all |SMD| &lt; 0.1.</code>, and the full tables are in <code>summary()</code>. A warning means the user has to act, so no package warns that it used a default, prints a startup message, or passes another package’s note through unchanged. A note raised by another package is caught, and it is raised again as an etverse condition only when the user has to act on it. Printed tables carry no column-type rows.</p>
+</section>
+<section id="documents-read-in-order" class="level3">
+<h3 class="anchored" data-anchor-id="documents-read-in-order">Documents read in order</h3>
+<p>Each package’s vignettes are numbered, and each builds only on the ones before it, so a reader never meets a concept that an earlier vignette has not introduced.</p>
+</section>
+</section>
+<section id="packages" class="level2">
+<h2 class="anchored" data-anchor-id="packages">Packages</h2>
+<p>Every feature has one owner. Another package that needs the feature calls the owner’s developer interface and does not write its own version.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Package</th>
+<th>Owns</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>causatr</td>
+<td>Point treatments: g-computation, inverse probability weighting (IPW), augmented IPW (AIPW), matching and structural nested models, with transport to a target population, censoring weights for point estimators, multinomial outcomes, multivariate treatments and stochastic interventions. It also owns what every package uses: the <code>contrast()</code> and <code>diagnose()</code> generics, the result contract, the intervention constructors, influence-function and bootstrap variance, pooling across multiple imputations, the shared validators and the condition helpers.</td>
+</tr>
+<tr class="even">
+<td>dynamatr</td>
+<td>Time-varying treatments: iterated conditional expectation (ICE) g-computation, natural-history modified treatment policies, longitudinal IPW, AIPW and structural nested models, conversion to person-period data, and censoring weights for longitudinal data.</td>
+</tr>
+<tr class="odd">
+<td>survatr</td>
+<td>Time-to-event estimands in cohort data: survival and risk curves, restricted mean survival time (RMST), restricted mean time lost and competing risks.</td>
+</tr>
+<tr class="even">
+<td>matchatr</td>
+<td>Sampled designs: unmatched and matched case-control, nested case-control, case-cohort and two-phase designs. Its survival g-computation is its own, because survatr’s estimator cannot carry the time-varying risk-set weights a case-cohort design needs. Self-controlled case series and power calculations are outside its scope.</td>
+</tr>
+<tr class="odd">
+<td>negatr</td>
+<td>Methods that use observed negative-control exposures or outcomes to detect and correct bias, proximal causal inference included.</td>
+</tr>
+<tr class="even">
+<td>biasetr</td>
+<td>Bias analysis that needs no negative-control data: E-values, bias formulas and probabilistic bias analysis.</td>
+</tr>
+<tr class="odd">
+<td>emulatr</td>
+<td>Target-trial emulation: the protocol object, clone-censor-weight analyses and sequential trials, with causatr and survatr as its estimators.</td>
+</tr>
+<tr class="even">
+<td>dagtr</td>
+<td>Turning a directed acyclic graph into an adjustment set and a <code>confounders</code> formula, as a thin layer over dagitty.</td>
+</tr>
+<tr class="odd">
+<td>separatr</td>
+<td>Separable-effect estimands, built on survatr.</td>
+</tr>
+<tr class="even">
+<td>triangulatr</td>
+<td>Collecting results from the other packages through <code>tidy()</code> and <code>glance()</code> and assessing whether they agree.</td>
+</tr>
+</tbody>
+</table>
+<p>A package supports a combination of estimator, design, intervention and variance method once an independent oracle (a reference implementation written by others, or estimating equations derived from the paper by someone who has not read the R code) and a Monte Carlo test of bias, standard error and coverage check it. Any other combination raises the package’s <code>unsupported</code> error and names the combination.</p>
+</section>
+<section id="dependencies" class="level2">
+<h2 class="anchored" data-anchor-id="dependencies">Dependencies</h2>
+<pre class="text"><code>causatr
+├── dynamatr
+│   └── survatr        imports causatr and dynamatr
+│       ├── separatr
+│       └── emulatr    also imports causatr
+├── matchatr
+├── negatr
+└── biasetr
+
+dagtr                  imports dagitty only
+triangulatr            imports generics only; every other package is in Suggests</code></pre>
+<p>The graph has no cycles, and no chain runs more than three levels below causatr. A package lists another in Imports only when its <code>R/</code> code calls it. Every package that builds on causatr declares the lowest causatr version it works with, and every <code>Remotes</code> entry points to a tagged release rather than a branch. dagtr and triangulatr install without any estimator package. No etverse package calls another’s unexported functions with <code>:::</code>.</p>
+</section>
+<section id="verbs" class="level2">
+<h2 class="anchored" data-anchor-id="verbs">Verbs</h2>
+<p>Each package has one fit verb, named after the package without its final r: <code>causat()</code>, <code>dynamat()</code>, <code>survat()</code>, <code>matchat()</code>, <code>negat()</code>. The fit verb takes the data and the model specification and returns a fit.</p>
+<p>causatr defines the two generics every package shares, <code>contrast(fit, ...)</code> and <code>diagnose(fit, ...)</code>. <code>contrast()</code> estimates the quantities of interest under each intervention and compares them, and <code>diagnose()</code> checks the assumptions the fit rests on, such as positivity and covariate balance. Every other package imports both generics from causatr, registers its methods on them and re-exports them, and no other package exports a function with either name. negatr’s corrections are <code>contrast()</code> methods and its assumption checks are <code>diagnose()</code> methods.</p>
+<p>The methods take the shared arguments in one order: <code>interventions</code>, <code>type</code>, <code>measure</code>, <code>ci_method</code>, <code>conf_level</code>, <code>n_boot</code>, <code>trim</code>. A package adds a verb only for a concept that neither generic expresses. Plots are <code>plot()</code> methods, and forest plots are drawn with the forrest package.</p>
+<p>Interventions are built with causatr’s constructors (<code>static()</code>, <code>shift()</code>, <code>scale_by()</code>, <code>threshold()</code>, <code>dynamic()</code>, <code>ipsi()</code>, <code>stochastic()</code> and the natural-history policies) in every package.</p>
+</section>
+<section id="arguments" class="level2">
+<h2 class="anchored" data-anchor-id="arguments">Arguments</h2>
+<p>One concept has one name in every package.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Argument</th>
+<th>Meaning</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>data</code></td>
+<td>the analysis data</td>
+<td>none</td>
+</tr>
+<tr class="even">
+<td><code>outcome</code></td>
+<td>the outcome column</td>
+<td>none</td>
+</tr>
+<tr class="odd">
+<td><code>treatment</code></td>
+<td>the treatment column or columns</td>
+<td>none</td>
+</tr>
+<tr class="even">
+<td><code>confounders</code></td>
+<td>a one-sided formula used by every model, or a named list of formulas with the names <code>outcome</code>, <code>treatment</code>, <code>censoring</code>, <code>sampling</code> and <code>tv</code></td>
+<td>none</td>
+</tr>
+<tr class="odd">
+<td><code>id</code>, <code>time</code></td>
+<td>the person and time columns of long data</td>
+<td>none</td>
+</tr>
+<tr class="even">
+<td><code>estimator</code></td>
+<td>the estimator</td>
+<td><code>"gcomp"</code> in causatr, dynamatr and survatr; set by the design in matchatr</td>
+</tr>
+<tr class="odd">
+<td><code>model_fn</code></td>
+<td>the function that fits the outcome model</td>
+<td><code>stats::glm</code></td>
+</tr>
+<tr class="even">
+<td><code>propensity_model_fn</code></td>
+<td>the function that fits the treatment model</td>
+<td><code>stats::glm</code></td>
+</tr>
+<tr class="odd">
+<td><code>censoring_model_fn</code></td>
+<td>the function that fits the censoring model</td>
+<td><code>stats::glm</code></td>
+</tr>
+<tr class="even">
+<td><code>weights</code></td>
+<td>observation weights</td>
+<td><code>NULL</code></td>
+</tr>
+<tr class="odd">
+<td><code>interventions</code></td>
+<td>a named list of interventions to compare</td>
+<td>none; matchatr’s designs fix the comparison</td>
+</tr>
+<tr class="even">
+<td><code>type</code></td>
+<td>the contrast scale: <code>"difference"</code>, <code>"ratio"</code> or <code>"or"</code>, and a package may add a scale such as <code>"hr"</code> or <code>"af"</code></td>
+<td><code>"difference"</code></td>
+</tr>
+<tr class="odd">
+<td><code>measure</code></td>
+<td>the quantity contrasted in survatr and matchatr: <code>"risk"</code>, <code>"survival"</code>, <code>"rmst"</code>, <code>"rmtl"</code>, <code>"cif"</code> or <code>"quantile"</code></td>
+<td>set by each package</td>
+</tr>
+<tr class="even">
+<td><code>ci_method</code></td>
+<td><code>"sandwich"</code>, <code>"bootstrap"</code> or <code>"none"</code>; matchatr also accepts <code>"model"</code></td>
+<td><code>"sandwich"</code></td>
+</tr>
+<tr class="odd">
+<td><code>conf_level</code></td>
+<td>the confidence level; <code>tidy()</code> takes broom’s <code>conf.level</code></td>
+<td><code>0.95</code></td>
+</tr>
+<tr class="even">
+<td><code>n_boot</code></td>
+<td>bootstrap replicates</td>
+<td><code>1000</code></td>
+</tr>
+<tr class="odd">
+<td><code>boot_ci</code></td>
+<td><code>"percentile"</code> or <code>"normal"</code> bootstrap intervals</td>
+<td><code>"percentile"</code></td>
+</tr>
+<tr class="even">
+<td><code>trim</code></td>
+<td>the quantile at which weights are truncated, an argument of <code>contrast()</code></td>
+<td><code>1</code>, no truncation</td>
+</tr>
+</tbody>
+</table>
+<p>No package uses <code>exposure</code> or <code>covariates</code> for these concepts, and no verb warns when a default is used. At 1,000 replicates a 95% percentile interval rests on 25 replicates in each tail. <code>trim</code> belongs to <code>contrast()</code> because the density-ratio weights of shift and incremental interventions depend on the intervention, which is only known there.</p>
+<p>No verb has a <code>seed</code>, <code>parallel</code> or <code>ncpus</code> argument. Calling <code>set.seed()</code> before a verb makes its result reproducible, in parallel runs as well, and the bootstrap reads its parallel settings from the <code>boot.parallel</code> and <code>boot.ncpus</code> options.</p>
+</section>
+<section id="objects" class="level2">
+<h2 class="anchored" data-anchor-id="objects">Objects</h2>
+<section id="fits" class="level3">
+<h3 class="anchored" data-anchor-id="fits">Fits</h3>
+<p>A fit has the class <code>c("&lt;pkg&gt;_fit_&lt;estimator&gt;", "&lt;pkg&gt;_fit", "etverse_fit")</code>, for example <code>causatr_fit_ipw</code>. Estimator-specific code is a method for its subclass, so no code branches on the name of the estimator. A field that only one estimator needs is part of that subclass and is checked by its constructor; a fit has no untyped list of details.</p>
+</section>
+<section id="results" class="level3">
+<h3 class="anchored" data-anchor-id="results">Results</h3>
+<p>Every result has the class <code>c("&lt;pkg&gt;_result", "etverse_result")</code> and is built by causatr’s developer interface. It holds these fields:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>estimates</code></td>
+<td>one row per intervention, and per time and cause where the result has them</td>
+</tr>
+<tr class="even">
+<td><code>contrasts</code></td>
+<td>one row per comparison</td>
+</tr>
+<tr class="odd">
+<td><code>type</code>, <code>measure</code>, <code>estimand</code></td>
+<td>the contrast scale, the quantity and the target population</td>
+</tr>
+<tr class="even">
+<td><code>reference</code></td>
+<td>the intervention the others are compared with</td>
+</tr>
+<tr class="odd">
+<td><code>ci_method</code>, <code>conf_level</code></td>
+<td>how the intervals were computed</td>
+</tr>
+<tr class="even">
+<td><code>vcov</code></td>
+<td>the covariance matrix of the estimates, stored whenever intervals are computed</td>
+</tr>
+<tr class="odd">
+<td><code>n</code>, <code>estimator</code>, <code>call</code></td>
+<td>the sample size, the estimator and the call</td>
+</tr>
+</tbody>
+</table>
+<p>A package adds a field only when its constructor checks it. causatr writes <code>print()</code>, <code>summary()</code>, <code>tidy()</code>, <code>glance()</code>, <code>coef()</code>, <code>vcov()</code>, <code>confint()</code>, <code>plot()</code> and <code>knit_print()</code> once for <code>etverse_result</code>, and a package overrides a method only where its result needs something different, as survatr’s <code>plot()</code> draws curves over time.</p>
+</section>
+<section id="tidy-and-glance" class="level3">
+<h3 class="anchored" data-anchor-id="tidy-and-glance"><code>tidy()</code> and <code>glance()</code></h3>
+<p><code>tidy()</code> returns a data.frame with broom’s column names: <code>term</code>, <code>estimate</code>, <code>std.error</code>, <code>conf.low</code> and <code>conf.high</code>, a <code>component</code> column that is <code>"estimate"</code> or <code>"contrast"</code>, and <code>time</code> and <code>cause</code> when the result has them. <code>glance()</code> returns one row with the package, estimator, measure, contrast scale, CI method and sample size. triangulatr reads results through these two methods only.</p>
+</section>
+<section id="data-structures" class="level3">
+<h3 class="anchored" data-anchor-id="data-structures">Data structures</h3>
+<p>Every table inside a package is a data.table. A fit stores the data once and keeps only the parts of each fitted model that the variance and prediction code reads, not the whole model object. What a user receives from <code>tidy()</code> and <code>glance()</code> is a plain data.frame.</p>
+</section>
+</section>
+<section id="developer-interface" class="level2">
+<h2 class="anchored" data-anchor-id="developer-interface">Developer interface</h2>
+<p>causatr exports the functions other etverse packages build on, and dynamatr does the same for its time-varying engine. Every such function has the prefix <code>dev_</code> and is documented with <code>@keywords internal</code>, so it does not appear in the user-facing reference index. The functions fall into groups, each documented on one help page:</p>
+<ul>
+<li>model influence functions and variance</li>
+<li>treatment models, densities and weights</li>
+<li>censoring weights</li>
+<li>interventions</li>
+<li>the bootstrap engine</li>
+<li>pooling across multiple imputations</li>
+<li>the fit and result constructors</li>
+<li>shared input validators</li>
+<li>condition helpers</li>
+<li>in dynamatr, the steps of the ICE recursion and person-period conversion</li>
+</ul>
+<p>A change to a <code>dev_</code> function is a breaking change: it is recorded in <code>NEWS.md</code> and raises the package’s minor version. causatr’s continuous integration runs the test suites of the packages that build on it on every pull request.</p>
+</section>
+<section id="conditions" class="level2">
+<h2 class="anchored" data-anchor-id="conditions">Conditions</h2>
+<p>Every error, warning and message carries three classes: a leaf class that names the problem, <code>&lt;pkg&gt;_&lt;problem&gt;</code>; a package class, <code>&lt;pkg&gt;_error</code> or <code>&lt;pkg&gt;_warning</code>; and an ecosystem class, <code>etverse_error</code> or <code>etverse_warning</code>. A user can therefore catch one specific problem, anything from one package, or anything from the etverse. No condition is raised without its classes.</p>
+<p>Messages are written with cli, so arguments and values are marked up and plurals agree. causatr’s developer interface provides <code>dev_abort()</code>, <code>dev_warn()</code> and <code>dev_inform()</code>, which attach the package and ecosystem classes, and each package calls them through a two-line local function that supplies its own name. A combination a package does not support raises <code>&lt;pkg&gt;_unsupported</code>, and its message names the combination.</p>
+<p>Tests check a condition by its class, with <code>expect_error(class = )</code> and <code>expect_warning(class = )</code>, and use snapshots only to check the wording of a message.</p>
+</section>
+<section id="writing" class="level2">
+<h2 class="anchored" data-anchor-id="writing">Writing</h2>
+<p>The same writing rules hold in every package, for code comments, documentation and prose.</p>
+<p>A code comment explains why: a derivation, with the paper and equation it comes from; a design reason; an invariant the code relies on. It does not restate what the code does, and it never names a development phase, chunk, track, review or incident, because a reader of the code has no access to those.</p>
+<p>Documentation is roxygen in Markdown, with titles in sentence case. Every exported function has an example that runs. Internal functions are marked <code>@noRd</code> and carry a docstring only where it says something the signature does not.</p>
+<p>A test’s name states the behaviour it checks, such as “IPW sandwich SE matches delicatessen”. An error message states the problem first, then says in an <code>i</code> bullet how to fix it.</p>
+<p>Markdown and Quarto files keep each paragraph on one line, write headings in sentence case and use no horizontal rules. Every text uses the argument names on this page.</p>
+<p>A check in the repository template fails continuous integration when a planning label (a phase, chunk or track number) appears in <code>R/</code>, <code>tests/</code> or <code>vignettes/</code>, and when a paragraph in a Markdown or Quarto file is wrapped across lines.</p>
+</section>
+<section id="vignettes" class="level2">
+<h2 class="anchored" data-anchor-id="vignettes">Vignettes</h2>
+<p>Every package has the same numbered set of vignettes, read in order.</p>
+<ol type="1">
+<li><code>01-get-started</code>: one real analysis from start to finish (fit, diagnose, contrast and <code>tidy()</code>) on NHEFS or another standard dataset, in under 300 lines.</li>
+<li><code>02-supported</code>: the table of what the package supports, generated from its own dispatch tables so that it cannot drift from the code, together with every combination it rejects and the class of the error that rejection raises. causatr’s also shows how missing data are handled in each scenario.</li>
+<li>One how-to per estimator or design: when to use the method, what it assumes, how to call it and which diagnostics to read, with the mathematics beside the code that implements it, in at most 400 lines.</li>
+<li>One theory vignette per method: identification, the estimating equations, the influence function and the variance, with citations.</li>
+<li>A validation vignette: each estimator compared with independent software, with the numbers read from committed fixtures, and the Monte Carlo results for bias, standard error and coverage.</li>
+</ol>
+<p>Every vignette renders in under 60 seconds in continuous integration. Anything heavier, such as a simulation, a large bootstrap or a comparison with other software, runs in a script under <code>data-raw/</code>, and the vignette reads its output. A vignette shows results as <code>print()</code> shows them.</p>
+<p>One vignette spans the packages and lives on this site: the same question answered through causatr, survatr, matchatr and negatr, which is the triangulation the ecosystem exists for.</p>
+</section>
+<section id="how-the-etverse-is-built" class="level2">
+<h2 class="anchored" data-anchor-id="how-the-etverse-is-built">How the etverse is built</h2>
+<p>The etverse is written with Claude Code, Anthropic’s coding agent. Claude Code writes most of the code, tests and documentation, under the direction of the maintainer, who reviews what it produces. The maintainer decides the design on this page, what each package owns and which methods a package supports.</p>
+<p>No number is trusted because the code that produced it looks right. Every estimator is checked against independent software or against estimating equations derived from the paper by someone who has not read the R code, and Monte Carlo tests check its bias, standard error and coverage. The validation vignette of each package shows those comparisons.</p>
+<p>Every package README carries the same short acknowledgement, which links to this section.</p>
+</section>
+<section id="repository-template" class="level2">
+<h2 class="anchored" data-anchor-id="repository-template">Repository template</h2>
+<p>Every package starts from the public template repository <code>etverse/template</code>, which holds the files the packages share:</p>
+<ul>
+<li><code>DESCRIPTION</code> fields: <code>Depends: R (&gt;= 4.1.0)</code>, testthat edition 3 run in parallel, and “Part of the etverse” in the description</li>
+<li><code>air.toml</code>, <code>.lintr</code>, <code>codecov.yml</code>, <code>.Rbuildignore</code>, <code>.gitignore</code> and a <code>Makefile</code> with the same targets in every package</li>
+<li>workflows for the format check, the documentation site (altdoc with Quarto) and test coverage, run on pushes and pull requests</li>
+<li><code>R-CMD-check</code>, which runs a fast test tier on Ubuntu with the released R for every pull request, and the full platform matrix (macOS, Windows, and Ubuntu with R-devel, the released R and the previous release) on the main branch</li>
+<li>the full test tier, run weekly or on demand and split across jobs, selected by the <code>ETVERSE_TEST_TIER</code> environment variable, with no nightly schedule</li>
+<li><code>tests/testthat/helper-dgp.R</code> for the data-generating processes, and oracle scripts with their outputs in <code>tests/testthat/fixtures/&lt;language&gt;/</code>, with a pinned <code>requirements.txt</code> for Python; a test whose fixture is missing fails rather than skips</li>
+<li><code>ROADMAP.md</code> for planned work, <code>NEWS.md</code> for changes a user would notice, and <code>README.Rmd</code> rendered in continuous integration, with the acknowledgement of Claude Code</li>
+<li>a short <code>CLAUDE.md</code> and path-scoped rules under <code>.claude/rules/</code></li>
+</ul>
+<p><code>make template-check</code> compares a package’s shared files with the template, and continuous integration fails when they differ.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/etverse\.github\.io");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+          if (!link.classList.contains('no-external-icon')) {
+          }
+        }
+      }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
+          if (lineIds.length > 0) {
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            placeBand(gutterDiv, el, lastEl);
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      &nbsp;
+    </div>   
+    <div class="nav-footer-center">
+<p>Part of the etverse · triangulating causal evidence in epidemiology</p>
+</div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

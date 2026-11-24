@@ -1,38 +1,94 @@
 [
   {
-    "objectID": "philosophy.html",
-    "href": "philosophy.html",
-    "title": "Philosophy",
+    "objectID": "design.html",
+    "href": "design.html",
+    "title": "Design",
     "section": "",
-    "text": "Every attempt to estimate a causal effect from observational data rests on assumptions that cannot be fully verified — no unmeasured confounding, correct model specification, no selection bias, accurate measurement. A single estimate, however carefully produced, inherits whatever bias its assumptions let through."
+    "text": "This page fixes how every etverse package is built and how the packages work together: what each one owns, how they depend on each other, the verbs and argument names they share, the objects they return, the conditions they raise, how their code and documentation are written, and the repository they start from. negatr and dynamatr follow it from their first commit. causatr, survatr and matchatr are being brought into line with it, and until that work is released their own documentation describes what they do today."
   },
   {
-    "objectID": "philosophy.html#the-problem",
-    "href": "philosophy.html#the-problem",
-    "title": "Philosophy",
-    "section": "",
-    "text": "Every attempt to estimate a causal effect from observational data rests on assumptions that cannot be fully verified — no unmeasured confounding, correct model specification, no selection bias, accurate measurement. A single estimate, however carefully produced, inherits whatever bias its assumptions let through."
+    "objectID": "design.html#principles",
+    "href": "design.html#principles",
+    "title": "Design",
+    "section": "Principles",
+    "text": "Principles\nFour principles govern every package’s interface. They are adapted from the design half of the philosophy of DeepSeek’s dsh-superagent prototype, published under the MIT licence.\n\nFew concepts\nThe ecosystem has five concepts: a fit, an intervention, a contrast, a diagnostic and a result. A new need becomes an argument value or a method on one of them. It does not become a new verb or a new family of classes.\n\n\nFew arguments\nA default replaces an argument when one value suits almost every analysis. No exported verb takes more than 15 formal arguments, and no verb moves its options into a control object: an option either has a default good enough to remove it, or it is an argument the user can see.\n\n\nOutput that shows only what needs attention\nprint() lists problems first and then the estimates. A check that finds nothing wrong takes one line, such as Positivity: no violations. Balance: all |SMD| &lt; 0.1., and the full tables are in summary(). A warning means the user has to act, so no package warns that it used a default, prints a startup message, or passes another package’s note through unchanged. A note raised by another package is caught, and it is raised again as an etverse condition only when the user has to act on it. Printed tables carry no column-type rows.\n\n\nDocuments read in order\nEach package’s vignettes are numbered, and each builds only on the ones before it, so a reader never meets a concept that an earlier vignette has not introduced."
   },
   {
-    "objectID": "philosophy.html#triangulation",
-    "href": "philosophy.html#triangulation",
-    "title": "Philosophy",
-    "section": "Triangulation",
-    "text": "Triangulation\nTriangulation is the practice of integrating results from several approaches that have different and unrelated sources of potential bias (Lawlor, Tilling & Davey Smith, 2016). The logic is simple: if two methods would be wrong in different directions for different reasons, their agreement is hard to explain by bias alone. Convergence is evidence; divergence is a signal to investigate.\nThe etverse builds this idea into tooling at three levels.\n\nMethodological triangulation\nEstimate one estimand several ways. G-computation leans on a correctly specified outcome model; IPW leans on a correctly specified treatment model; AIPW is doubly robust; g-estimation targets effect modification; matching trades efficiency for transparency. These assumptions fail independently, so agreement across them is informative.\n→ causatr, survatr, separatr\n\n\nDesign triangulation\nAsk the same question through study designs whose biases are unrelated — a cohort analysis, a case-control study, a target-trial emulation, a negative-control analysis. A confounding structure that biases one design need not bias another.\n→ matchatr, negatr, emulatr, dagtr\n\n\nEvidence triangulation\nIntegrate across data sources, populations, and assumptions rather than resting on a single point estimate. Quantitative bias analysis makes the residual uncertainty explicit; a meta-layer assesses whether the body of estimates actually triangulates.\n→ biasetr, triangulatr"
+    "objectID": "design.html#packages",
+    "href": "design.html#packages",
+    "title": "Design",
+    "section": "Packages",
+    "text": "Packages\nEvery feature has one owner. Another package that needs the feature calls the owner’s developer interface and does not write its own version.\n\n\n\n\n\n\n\nPackage\nOwns\n\n\n\n\ncausatr\nPoint treatments: g-computation, inverse probability weighting (IPW), augmented IPW (AIPW), matching and structural nested models, with transport to a target population, censoring weights for point estimators, multinomial outcomes, multivariate treatments and stochastic interventions. It also owns what every package uses: the contrast() and diagnose() generics, the result contract, the intervention constructors, influence-function and bootstrap variance, pooling across multiple imputations, the shared validators and the condition helpers.\n\n\ndynamatr\nTime-varying treatments: iterated conditional expectation (ICE) g-computation, natural-history modified treatment policies, longitudinal IPW, AIPW and structural nested models, conversion to person-period data, and censoring weights for longitudinal data.\n\n\nsurvatr\nTime-to-event estimands in cohort data: survival and risk curves, restricted mean survival time (RMST), restricted mean time lost and competing risks.\n\n\nmatchatr\nSampled designs: unmatched and matched case-control, nested case-control, case-cohort and two-phase designs. Its survival g-computation is its own, because survatr’s estimator cannot carry the time-varying risk-set weights a case-cohort design needs. Self-controlled case series and power calculations are outside its scope.\n\n\nnegatr\nMethods that use observed negative-control exposures or outcomes to detect and correct bias, proximal causal inference included.\n\n\nbiasetr\nBias analysis that needs no negative-control data: E-values, bias formulas and probabilistic bias analysis.\n\n\nemulatr\nTarget-trial emulation: the protocol object, clone-censor-weight analyses and sequential trials, with causatr and survatr as its estimators.\n\n\ndagtr\nTurning a directed acyclic graph into an adjustment set and a confounders formula, as a thin layer over dagitty.\n\n\nseparatr\nSeparable-effect estimands, built on survatr.\n\n\ntriangulatr\nCollecting results from the other packages through tidy() and glance() and assessing whether they agree.\n\n\n\nA package supports a combination of estimator, design, intervention and variance method once an independent oracle (a reference implementation written by others, or estimating equations derived from the paper by someone who has not read the R code) and a Monte Carlo test of bias, standard error and coverage check it. Any other combination raises the package’s unsupported error and names the combination."
   },
   {
-    "objectID": "philosophy.html#design-principles",
-    "href": "philosophy.html#design-principles",
-    "title": "Philosophy",
-    "section": "Design principles",
-    "text": "Design principles\n\nOne job per package. Each -tr package does one thing well; the suffix marks its place in the ecosystem.\nA shared engine. causatr provides the estimation core (sandwich and bootstrap variance, contrasts); other packages compose with it rather than reimplementing it.\nA common grammar. Fit, then contrast. The same two-step API recurs across packages, so moving between methods costs little.\nHonest uncertainty. The point of triangulating is to surface disagreement, not to hide it."
+    "objectID": "design.html#dependencies",
+    "href": "design.html#dependencies",
+    "title": "Design",
+    "section": "Dependencies",
+    "text": "Dependencies\ncausatr\n├── dynamatr\n│   └── survatr        imports causatr and dynamatr\n│       ├── separatr\n│       └── emulatr    also imports causatr\n├── matchatr\n├── negatr\n└── biasetr\n\ndagtr                  imports dagitty only\ntriangulatr            imports generics only; every other package is in Suggests\nThe graph has no cycles, and no chain runs more than three levels below causatr. A package lists another in Imports only when its R/ code calls it. Every package that builds on causatr declares the lowest causatr version it works with, and every Remotes entry points to a tagged release rather than a branch. dagtr and triangulatr install without any estimator package. No etverse package calls another’s unexported functions with :::."
   },
   {
-    "objectID": "philosophy.html#further-reading",
-    "href": "philosophy.html#further-reading",
-    "title": "Philosophy",
-    "section": "Further reading",
-    "text": "Further reading\n\nLawlor DA, Tilling K, Davey Smith G. Triangulation in aetiological epidemiology. International Journal of Epidemiology. 2016;45(6):1866–1886.\nHernán MA, Robins JM. Causal Inference: What If. Boca Raton: Chapman & Hall/CRC, 2025."
+    "objectID": "design.html#verbs",
+    "href": "design.html#verbs",
+    "title": "Design",
+    "section": "Verbs",
+    "text": "Verbs\nEach package has one fit verb, named after the package without its final r: causat(), dynamat(), survat(), matchat(), negat(). The fit verb takes the data and the model specification and returns a fit.\ncausatr defines the two generics every package shares, contrast(fit, ...) and diagnose(fit, ...). contrast() estimates the quantities of interest under each intervention and compares them, and diagnose() checks the assumptions the fit rests on, such as positivity and covariate balance. Every other package imports both generics from causatr, registers its methods on them and re-exports them, and no other package exports a function with either name. negatr’s corrections are contrast() methods and its assumption checks are diagnose() methods.\nThe methods take the shared arguments in one order: interventions, type, measure, ci_method, conf_level, n_boot, trim. A package adds a verb only for a concept that neither generic expresses. Plots are plot() methods, and forest plots are drawn with the forrest package.\nInterventions are built with causatr’s constructors (static(), shift(), scale_by(), threshold(), dynamic(), ipsi(), stochastic() and the natural-history policies) in every package."
+  },
+  {
+    "objectID": "design.html#arguments",
+    "href": "design.html#arguments",
+    "title": "Design",
+    "section": "Arguments",
+    "text": "Arguments\nOne concept has one name in every package.\n\n\n\n\n\n\n\n\nArgument\nMeaning\nDefault\n\n\n\n\ndata\nthe analysis data\nnone\n\n\noutcome\nthe outcome column\nnone\n\n\ntreatment\nthe treatment column or columns\nnone\n\n\nconfounders\na one-sided formula used by every model, or a named list of formulas with the names outcome, treatment, censoring, sampling and tv\nnone\n\n\nid, time\nthe person and time columns of long data\nnone\n\n\nestimator\nthe estimator\n\"gcomp\" in causatr, dynamatr and survatr; set by the design in matchatr\n\n\nmodel_fn\nthe function that fits the outcome model\nstats::glm\n\n\npropensity_model_fn\nthe function that fits the treatment model\nstats::glm\n\n\ncensoring_model_fn\nthe function that fits the censoring model\nstats::glm\n\n\nweights\nobservation weights\nNULL\n\n\ninterventions\na named list of interventions to compare\nnone; matchatr’s designs fix the comparison\n\n\ntype\nthe contrast scale: \"difference\", \"ratio\" or \"or\", and a package may add a scale such as \"hr\" or \"af\"\n\"difference\"\n\n\nmeasure\nthe quantity contrasted in survatr and matchatr: \"risk\", \"survival\", \"rmst\", \"rmtl\", \"cif\" or \"quantile\"\nset by each package\n\n\nci_method\n\"sandwich\", \"bootstrap\" or \"none\"; matchatr also accepts \"model\"\n\"sandwich\"\n\n\nconf_level\nthe confidence level; tidy() takes broom’s conf.level\n0.95\n\n\nn_boot\nbootstrap replicates\n1000\n\n\nboot_ci\n\"percentile\" or \"normal\" bootstrap intervals\n\"percentile\"\n\n\ntrim\nthe quantile at which weights are truncated, an argument of contrast()\n1, no truncation\n\n\n\nNo package uses exposure or covariates for these concepts, and no verb warns when a default is used. At 1,000 replicates a 95% percentile interval rests on 25 replicates in each tail. trim belongs to contrast() because the density-ratio weights of shift and incremental interventions depend on the intervention, which is only known there.\nNo verb has a seed, parallel or ncpus argument. Calling set.seed() before a verb makes its result reproducible, in parallel runs as well, and the bootstrap reads its parallel settings from the boot.parallel and boot.ncpus options."
+  },
+  {
+    "objectID": "design.html#objects",
+    "href": "design.html#objects",
+    "title": "Design",
+    "section": "Objects",
+    "text": "Objects\n\nFits\nA fit has the class c(\"&lt;pkg&gt;_fit_&lt;estimator&gt;\", \"&lt;pkg&gt;_fit\", \"etverse_fit\"), for example causatr_fit_ipw. Estimator-specific code is a method for its subclass, so no code branches on the name of the estimator. A field that only one estimator needs is part of that subclass and is checked by its constructor; a fit has no untyped list of details.\n\n\nResults\nEvery result has the class c(\"&lt;pkg&gt;_result\", \"etverse_result\") and is built by causatr’s developer interface. It holds these fields:\n\n\n\n\n\n\n\nField\nContent\n\n\n\n\nestimates\none row per intervention, and per time and cause where the result has them\n\n\ncontrasts\none row per comparison\n\n\ntype, measure, estimand\nthe contrast scale, the quantity and the target population\n\n\nreference\nthe intervention the others are compared with\n\n\nci_method, conf_level\nhow the intervals were computed\n\n\nvcov\nthe covariance matrix of the estimates, stored whenever intervals are computed\n\n\nn, estimator, call\nthe sample size, the estimator and the call\n\n\n\nA package adds a field only when its constructor checks it. causatr writes print(), summary(), tidy(), glance(), coef(), vcov(), confint(), plot() and knit_print() once for etverse_result, and a package overrides a method only where its result needs something different, as survatr’s plot() draws curves over time.\n\n\ntidy() and glance()\ntidy() returns a data.frame with broom’s column names: term, estimate, std.error, conf.low and conf.high, a component column that is \"estimate\" or \"contrast\", and time and cause when the result has them. glance() returns one row with the package, estimator, measure, contrast scale, CI method and sample size. triangulatr reads results through these two methods only.\n\n\nData structures\nEvery table inside a package is a data.table. A fit stores the data once and keeps only the parts of each fitted model that the variance and prediction code reads, not the whole model object. What a user receives from tidy() and glance() is a plain data.frame."
+  },
+  {
+    "objectID": "design.html#developer-interface",
+    "href": "design.html#developer-interface",
+    "title": "Design",
+    "section": "Developer interface",
+    "text": "Developer interface\ncausatr exports the functions other etverse packages build on, and dynamatr does the same for its time-varying engine. Every such function has the prefix dev_ and is documented with @keywords internal, so it does not appear in the user-facing reference index. The functions fall into groups, each documented on one help page:\n\nmodel influence functions and variance\ntreatment models, densities and weights\ncensoring weights\ninterventions\nthe bootstrap engine\npooling across multiple imputations\nthe fit and result constructors\nshared input validators\ncondition helpers\nin dynamatr, the steps of the ICE recursion and person-period conversion\n\nA change to a dev_ function is a breaking change: it is recorded in NEWS.md and raises the package’s minor version. causatr’s continuous integration runs the test suites of the packages that build on it on every pull request."
+  },
+  {
+    "objectID": "design.html#conditions",
+    "href": "design.html#conditions",
+    "title": "Design",
+    "section": "Conditions",
+    "text": "Conditions\nEvery error, warning and message carries three classes: a leaf class that names the problem, &lt;pkg&gt;_&lt;problem&gt;; a package class, &lt;pkg&gt;_error or &lt;pkg&gt;_warning; and an ecosystem class, etverse_error or etverse_warning. A user can therefore catch one specific problem, anything from one package, or anything from the etverse. No condition is raised without its classes.\nMessages are written with cli, so arguments and values are marked up and plurals agree. causatr’s developer interface provides dev_abort(), dev_warn() and dev_inform(), which attach the package and ecosystem classes, and each package calls them through a two-line local function that supplies its own name. A combination a package does not support raises &lt;pkg&gt;_unsupported, and its message names the combination.\nTests check a condition by its class, with expect_error(class = ) and expect_warning(class = ), and use snapshots only to check the wording of a message."
+  },
+  {
+    "objectID": "design.html#writing",
+    "href": "design.html#writing",
+    "title": "Design",
+    "section": "Writing",
+    "text": "Writing\nThe same writing rules hold in every package, for code comments, documentation and prose.\nA code comment explains why: a derivation, with the paper and equation it comes from; a design reason; an invariant the code relies on. It does not restate what the code does, and it never names a development phase, chunk, track, review or incident, because a reader of the code has no access to those.\nDocumentation is roxygen in Markdown, with titles in sentence case. Every exported function has an example that runs. Internal functions are marked @noRd and carry a docstring only where it says something the signature does not.\nA test’s name states the behaviour it checks, such as “IPW sandwich SE matches delicatessen”. An error message states the problem first, then says in an i bullet how to fix it.\nMarkdown and Quarto files keep each paragraph on one line, write headings in sentence case and use no horizontal rules. Every text uses the argument names on this page.\nA check in the repository template fails continuous integration when a planning label (a phase, chunk or track number) appears in R/, tests/ or vignettes/, and when a paragraph in a Markdown or Quarto file is wrapped across lines."
+  },
+  {
+    "objectID": "design.html#vignettes",
+    "href": "design.html#vignettes",
+    "title": "Design",
+    "section": "Vignettes",
+    "text": "Vignettes\nEvery package has the same numbered set of vignettes, read in order.\n\n01-get-started: one real analysis from start to finish (fit, diagnose, contrast and tidy()) on NHEFS or another standard dataset, in under 300 lines.\n02-supported: the table of what the package supports, generated from its own dispatch tables so that it cannot drift from the code, together with every combination it rejects and the class of the error that rejection raises. causatr’s also shows how missing data are handled in each scenario.\nOne how-to per estimator or design: when to use the method, what it assumes, how to call it and which diagnostics to read, with the mathematics beside the code that implements it, in at most 400 lines.\nOne theory vignette per method: identification, the estimating equations, the influence function and the variance, with citations.\nA validation vignette: each estimator compared with independent software, with the numbers read from committed fixtures, and the Monte Carlo results for bias, standard error and coverage.\n\nEvery vignette renders in under 60 seconds in continuous integration. Anything heavier, such as a simulation, a large bootstrap or a comparison with other software, runs in a script under data-raw/, and the vignette reads its output. A vignette shows results as print() shows them.\nOne vignette spans the packages and lives on this site: the same question answered through causatr, survatr, matchatr and negatr, which is the triangulation the ecosystem exists for."
+  },
+  {
+    "objectID": "design.html#how-the-etverse-is-built",
+    "href": "design.html#how-the-etverse-is-built",
+    "title": "Design",
+    "section": "How the etverse is built",
+    "text": "How the etverse is built\nThe etverse is written with Claude Code, Anthropic’s coding agent. Claude Code writes most of the code, tests and documentation, under the direction of the maintainer, who reviews what it produces. The maintainer decides the design on this page, what each package owns and which methods a package supports.\nNo number is trusted because the code that produced it looks right. Every estimator is checked against independent software or against estimating equations derived from the paper by someone who has not read the R code, and Monte Carlo tests check its bias, standard error and coverage. The validation vignette of each package shows those comparisons.\nEvery package README carries the same short acknowledgement, which links to this section."
+  },
+  {
+    "objectID": "design.html#repository-template",
+    "href": "design.html#repository-template",
+    "title": "Design",
+    "section": "Repository template",
+    "text": "Repository template\nEvery package starts from the public template repository etverse/template, which holds the files the packages share:\n\nDESCRIPTION fields: Depends: R (&gt;= 4.1.0), testthat edition 3 run in parallel, and “Part of the etverse” in the description\nair.toml, .lintr, codecov.yml, .Rbuildignore, .gitignore and a Makefile with the same targets in every package\nworkflows for the format check, the documentation site (altdoc with Quarto) and test coverage, run on pushes and pull requests\nR-CMD-check, which runs a fast test tier on Ubuntu with the released R for every pull request, and the full platform matrix (macOS, Windows, and Ubuntu with R-devel, the released R and the previous release) on the main branch\nthe full test tier, run weekly or on demand and split across jobs, selected by the ETVERSE_TEST_TIER environment variable, with no nightly schedule\ntests/testthat/helper-dgp.R for the data-generating processes, and oracle scripts with their outputs in tests/testthat/fixtures/&lt;language&gt;/, with a pinned requirements.txt for Python; a test whose fixture is missing fails rather than skips\nROADMAP.md for planned work, NEWS.md for changes a user would notice, and README.Rmd rendered in continuous integration, with the acknowledgement of Claude Code\na short CLAUDE.md and path-scoped rules under .claude/rules/\n\nmake template-check compares a package’s shared files with the template, and continuous integration fails when they differ."
   },
   {
     "objectID": "index.html",
@@ -53,6 +109,41 @@
     "href": "index.html#packages",
     "title": "the etverse",
     "section": "Packages",
-    "text": "Packages\nEvery package ends in -tr — for triangulation. Each does one job well and composes with the others through a shared engine.\n\n\ncausatr available\nUnified causal effect estimation: parametric g-formula and ICE g-computation, inverse-probability weighting, doubly-robust AIPW, structural nested mean models, and matching. The engine the rest of the etverse builds on.\n\n\nsurvatr available\nCausal survival analysis on person-period data: pooled-logistic hazard g-computation, IPW and ICE for time-to-event outcomes, risk-difference / RMST contrasts, competing risks, and IPCW.\n\n\nmatchatr in development\nClassical and causal estimation for (matched) case-control, nested case-control, and case-cohort designs — conditional logistic and weighted Cox models, plus case-control–weighted marginal effects that compose with causatr and survatr.\n\n\nnegatr in development\nNegative-control methods for detecting and correcting unmeasured confounding, selection bias, and measurement error — from simple null tests to proximal causal inference and empirical calibration.\n\n\nbiasetr planned\nQuantitative bias analysis — modelling how much a finding could shift under plausible biases, for the general case not covered by the negative-control machinery in negatr.\n\n\nseparatr planned\nSeparable effects — decomposing a treatment effect into components acting through distinct mechanisms, for sharper, more mechanistic causal questions.\n\n\ndagtr planned\nDirected acyclic graphs for encoding causal assumptions and deriving adjustment sets to drive the estimators above.\n\n\nemulatr planned\nTarget-trial emulation — turning an observational question into an explicit protocol and analysis.\n\n\ntriangulatr planned\nThe meta-package — collect estimates from across the etverse and assess whether they triangulate.\n\n\n\n\n\n\n\n\nNote\n\n\n\nThe etverse is early and evolving. Package scopes marked planned describe intended direction and may change."
+    "text": "Packages\nEvery package ends in -tr — for triangulation. Each does one job well and composes with the others through a shared engine.\n\n\ncausatr available\nCausal effects of point treatments: g-computation, inverse-probability weighting, doubly-robust AIPW, structural nested mean models and matching. The engine the rest of the etverse builds on.\n\n\ndynamatr planned\nCausal effects of time-varying treatments: ICE g-computation, natural-history modified treatment policies, and longitudinal IPW, AIPW and structural nested models.\n\n\nsurvatr available\nCausal survival analysis on person-period data: pooled-logistic hazard g-computation, IPW and ICE for time-to-event outcomes, risk-difference / RMST contrasts, competing risks, and IPCW.\n\n\nmatchatr in development\nClassical and causal estimation for (matched) case-control, nested case-control, and case-cohort designs — conditional logistic and weighted Cox models, plus case-control–weighted marginal effects that compose with causatr and survatr.\n\n\nnegatr in development\nNegative-control methods for detecting and correcting unmeasured confounding, selection bias, and measurement error — from simple null tests to proximal causal inference and empirical calibration.\n\n\nbiasetr planned\nQuantitative bias analysis — modelling how much a finding could shift under plausible biases, for the general case not covered by the negative-control machinery in negatr.\n\n\nseparatr planned\nSeparable effects — decomposing a treatment effect into components acting through distinct mechanisms, for sharper, more mechanistic causal questions.\n\n\ndagtr planned\nDirected acyclic graphs for encoding causal assumptions and deriving adjustment sets to drive the estimators above.\n\n\nemulatr planned\nTarget-trial emulation — turning an observational question into an explicit protocol and analysis.\n\n\ntriangulatr planned\nThe meta-package — collect estimates from across the etverse and assess whether they triangulate.\n\n\n\n\n\n\n\n\nNote\n\n\n\nThe etverse is early and evolving. Package scopes marked planned describe intended direction and may change."
+  },
+  {
+    "objectID": "philosophy.html",
+    "href": "philosophy.html",
+    "title": "Philosophy",
+    "section": "",
+    "text": "Every attempt to estimate a causal effect from observational data rests on assumptions that cannot be fully verified — no unmeasured confounding, correct model specification, no selection bias, accurate measurement. A single estimate, however carefully produced, inherits whatever bias its assumptions let through."
+  },
+  {
+    "objectID": "philosophy.html#the-problem",
+    "href": "philosophy.html#the-problem",
+    "title": "Philosophy",
+    "section": "",
+    "text": "Every attempt to estimate a causal effect from observational data rests on assumptions that cannot be fully verified — no unmeasured confounding, correct model specification, no selection bias, accurate measurement. A single estimate, however carefully produced, inherits whatever bias its assumptions let through."
+  },
+  {
+    "objectID": "philosophy.html#triangulation",
+    "href": "philosophy.html#triangulation",
+    "title": "Philosophy",
+    "section": "Triangulation",
+    "text": "Triangulation\nTriangulation is the practice of integrating results from several approaches that have different and unrelated sources of potential bias (Lawlor, Tilling & Davey Smith, 2016). The logic is simple: if two methods would be wrong in different directions for different reasons, their agreement is hard to explain by bias alone. Convergence is evidence; divergence is a signal to investigate.\nThe etverse builds this idea into tooling at three levels.\n\nMethodological triangulation\nEstimate one estimand several ways. G-computation leans on a correctly specified outcome model; IPW leans on a correctly specified treatment model; AIPW is doubly robust; g-estimation targets effect modification; matching trades efficiency for transparency. These assumptions fail independently, so agreement across them is informative.\n→ causatr, survatr, separatr\n\n\nDesign triangulation\nAsk the same question through study designs whose biases are unrelated — a cohort analysis, a case-control study, a target-trial emulation, a negative-control analysis. A confounding structure that biases one design need not bias another.\n→ matchatr, negatr, emulatr, dagtr\n\n\nEvidence triangulation\nIntegrate across data sources, populations, and assumptions rather than resting on a single point estimate. Quantitative bias analysis makes the residual uncertainty explicit, and a meta-layer assesses whether the body of estimates triangulates.\n→ biasetr, triangulatr"
+  },
+  {
+    "objectID": "philosophy.html#design-principles",
+    "href": "philosophy.html#design-principles",
+    "title": "Philosophy",
+    "section": "Design principles",
+    "text": "Design principles\nThe design page sets out how the packages are built and how they work together: what each one owns, the verbs and argument names they share, and the objects they return."
+  },
+  {
+    "objectID": "philosophy.html#further-reading",
+    "href": "philosophy.html#further-reading",
+    "title": "Philosophy",
+    "section": "Further reading",
+    "text": "Further reading\n\nLawlor DA, Tilling K, Davey Smith G. Triangulation in aetiological epidemiology. International Journal of Epidemiology. 2016;45(6):1866–1886.\nHernán MA, Robins JM. Causal Inference: What If. Boca Raton: Chapman & Hall/CRC, 2025."
   }
 ]
